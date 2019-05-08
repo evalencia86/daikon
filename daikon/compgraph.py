@@ -38,23 +38,18 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
         encoder_inputs_embedded = tf.nn.embedding_lookup(source_embedding, encoder_inputs)
         decoder_inputs_embedded = tf.nn.embedding_lookup(target_embedding, decoder_inputs)
 
-    with tf.variable_scope("Encoder"):
-        # encoder_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
+    with tf.variable_scope("Encoder"):  # Dropout out eingebaut, + zweiten Layer
         stacked_encoder_cells = tf.contrib.rnn.MultiRNNCell(
-            [tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)) for _ in range(2)])
+           [tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)) for _ in range(2)])
 
-        # Dropout out eingebaut, + zweite Zelle
-
-        initial_state = stacked_encoder_cells.zero_state(batch_size, tf.float32)[0]
-        # da multiRNNCell -> gibt ein Tuple der final states zurück. Deshalb [0]
+        initial_state = stacked_encoder_cells.zero_state(batch_size, tf.float32)
 
         encoder_outputs, encoder_final_state = tf.nn.dynamic_rnn(stacked_encoder_cells,
                                                                  encoder_inputs_embedded,
                                                                  initial_state=initial_state,
                                                                  dtype=tf.float32)
 
-    with tf.variable_scope("Decoder"):
-        # decoder_cell = tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)
+    with tf.variable_scope("Decoder"): #Zweiten Layer eingebaut.
         stacked_decoder_cells = tf.contrib.rnn.MultiRNNCell(
             [tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE) for _ in range(2)])
 
@@ -63,10 +58,8 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
                                                                  initial_state=encoder_final_state,
                                                                  dtype=tf.float32)
 
-        #Auch hier zweiten Layer eingebaut...
-
     with tf.variable_scope("Logits"):
-        decoder_logits = tf.contrib.layers.linear(decoder_outputs, target_vocab_size)  # decoder_outputs2 statt 1
+        decoder_logits = tf.contrib.layers.linear(decoder_outputs, target_vocab_size)
 
     with tf.variable_scope("Loss"):
         one_hot_labels = tf.one_hot(decoder_targets, depth=target_vocab_size, dtype=tf.float32)
