@@ -38,9 +38,10 @@ def define_computation_graph(source_vocab_size: int, target_vocab_size: int, bat
         encoder_inputs_embedded = tf.nn.embedding_lookup(source_embedding, encoder_inputs)
         decoder_inputs_embedded = tf.nn.embedding_lookup(target_embedding, decoder_inputs)
 
-    with tf.variable_scope("Encoder"):  # Dropout out eingebaut, + zweiten Layer
+    with tf.variable_scope("Encoder"):  # Dropout eingebaut, + zweiten Layer
         stacked_encoder_cells = tf.contrib.rnn.MultiRNNCell(
-           [tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE)) for _ in range(2)])
+            [tf.contrib.rnn.DropoutWrapper(tf.contrib.rnn.LSTMCell(C.HIDDEN_SIZE),
+                                           output_keep_prob=0.5) for _ in range(2)])
 
         initial_state = stacked_encoder_cells.zero_state(batch_size, tf.float32)
 
